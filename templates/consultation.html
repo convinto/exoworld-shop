@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Услуга подбора экзотического питомца{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="mb-4">🛠️ Подбор экзотического животного</h1>
+        <p class="lead">Заполните форму, и мы поможем вам выбрать идеального питомца, террариум и расскажем об уходе.</p>
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ваше имя *</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон *</label>
+                        <input type="tel" name="phone" class="form-control" required placeholder="+7 (XXX) XXX-XX-XX">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Какое животное вас интересует? *</label>
+                        <input type="text" name="animal_type" class="form-control" required placeholder="например: улитка ахатина, эублефар, бородатая агама">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Бюджет (ориентировочно)</label>
+                        <input type="text" name="budget" class="form-control" placeholder="например: до 5000 ₽ или 10000-20000 ₽">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ваш опыт содержания экзотических животных</label>
+                        <textarea name="experience" class="form-control" rows="3" placeholder="Новичок / Есть опыт с ..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дополнительные пожелания или вопросы</label>
+                        <textarea name="comment" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg">Отправить заявку</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

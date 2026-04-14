@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1>{{ article.title }}</h1>
+        <p class="text-muted">
+            Категория: {{ article.category }} | Просмотров: {{ article.views }} | {{ article.date.strftime('%d.%m.%Y') }}
+        </p>
+        <img src="{{ url_for('static', filename='article_images/' + article.image) }}" class="img-fluid rounded mb-4" alt="{{ article.title }}">
+        <div class="article-content">
+            {{ article.content | safe }}
+        </div>
+        <a href="{{ url_for('encyclopedia') }}" class="btn btn-secondary mt-4">← Назад к списку статей</a>
+    </div>
+</div>
+{% endblock %}

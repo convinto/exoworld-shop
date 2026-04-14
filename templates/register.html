@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация – ЭкзоМир{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4><i class="bi bi-person-plus"></i> Создать аккаунт</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <div class="form-text">Только латиница или цифры, без пробелов.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                        <div class="form-text">Минимум 6 символов.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm" class="form-label">Подтвердите пароль</label>
+                        <input type="password" class="form-control" id="confirm" name="confirm" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Простая проверка совпадения паролей на клиенте
+    const form = document.querySelector('form');
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm');
+    form.addEventListener('submit', function(e) {
+        if (password.value !== confirm.value) {
+            e.preventDefault();
+            alert('Пароли не совпадают!');
+        }
+    });
+</script>
+{% endblock %}

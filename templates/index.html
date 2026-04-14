@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}ЭкзоМир – экзотические животные и всё для них{% endblock %}
+
+{% block content %}
+<!-- Герой-секция -->
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">🐌 Добро пожаловать в ЭкзоМир!</h1>
+        <p class="fs-4">Улитки ахатины, рептилии, террариумы, корма и консультации экспертов.</p>
+        <a href="#" class="btn btn-success btn-lg">Смотреть новинки</a>
+    </div>
+</div>
+
+<!-- Разделы сайта (плитки) -->
+<h2 class="text-center mb-4">Наши направления</h2>
+<div class="row g-4 mb-5">
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 text-center">
+            <img src="https://placehold.co/400x300?text=🐌+Улитки" class="card-img-top" alt="Животные">
+            <div class="card-body">
+                <h5 class="card-title">Животные в наличии</h5>
+                <p class="card-text">Ахатины, эублефары, маисовые полозы и другие экзоты.</p>
+                <a href="#" class="btn btn-outline-success">Перейти</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 text-center">
+            <img src="https://placehold.co/400x300?text=🍎+Корм" class="card-img-top" alt="Корм">
+            <div class="card-body">
+                <h5 class="card-title">Корм</h5>
+                <p class="card-text">Сбалансированные смеси, кальций, насекомые и живые корма.</p>
+                <a href="#" class="btn btn-outline-success">Перейти</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 text-center">
+            <img src="https://placehold.co/400x300?text=🏠+Декор" class="card-img-top" alt="Декорации">
+            <div class="card-body">
+                <h5 class="card-title">Декорации</h5>
+                <p class="card-text">Укрытия, коряги, искусственные растения, фоны.</p>
+                <a href="#" class="btn btn-outline-success">Перейти</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 text-center">
+            <img src="https://placehold.co/400x300?text=📦+Террариумы" class="card-img-top" alt="Террариумы">
+            <div class="card-body">
+                <h5 class="card-title">Террариумы</h5>
+                <p class="card-text">Стеклянные и пластиковые, с подогревом и без.</p>
+                <a href="#" class="btn btn-outline-success">Перейти</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 text-center">
+            <img src="https://placehold.co/400x300?text=📖+Энциклопедия" class="card-img-top" alt="Энциклопедия">
+            <div class="card-body">
+                <h5 class="card-title">Энциклопедия</h5>
+                <p class="card-text">Статьи об уходе, разведении, болезнях экзотов.</p>
+                <a href="#" class="btn btn-outline-success">Читать</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3">
+        <div class="card h-100 text-center">
+            <img src="https://placehold.co/400x300?text=🛠️+Услуги" class="card-img-top" alt="Услуги">
+            <div class="card-body">
+                <h5 class="card-title">Услуги подбора</h5>
+                <p class="card-text">Поможем выбрать питомца, террариум и настроить уход.</p>
+                <a href="#" class="btn btn-outline-success">Заказать</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Блок популярных товаров (для примера, если в БД есть товары) -->
+{% if products %}
+    <h2 class="text-center mb-4">🔥 Популярные товары</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for product in products[:3] %}
+        <div class="col">
+            <div class="card h-100">
+                <img src="{{ url_for('static', filename='uploads/' + product.image) }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">{{ product.description[:80] }}...</p>
+                    <p class="fw-bold">{{ product.price }} ₽</p>
+                    <a href="{{ url_for('product', id=product.id) }}" class="btn btn-sm btn-primary">Подробнее</a>
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-sm btn-success">В корзину</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Пара слов о нас -->
+<div class="row mt-5 p-4 bg-light rounded">
+    <div class="col-md-6">
+        <h3><i class="bi bi-chat-dots"></i> Почему мы?</h3>
+        <ul>
+            <li>✅ Собственное разведение ахатин и рептилий</li>
+            <li>✅ Консультации 24/7 в чате</li>
+            <li>✅ Быстрая доставка по всей России</li>
+            <li>✅ Помогаем с обустройством террариума</li>
+        </ul>
+    </div>
+    <div class="col-md-6">
+        <h3><i class="bi bi-envelope-paper"></i> Связаться с нами</h3>
+        <p><i class="bi bi-telegram"></i> Telegram: @exoworld</p>
+        <p><i class="bi bi-envelope"></i> Email: info@exoworld.ru</p>
+        <p><i class="bi bi-whatsapp"></i> WhatsApp: +7 (999) 123-45-67</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Корзина</h1>
+{% if cart_items %}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.product.price }} ₽</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('update_cart', product_id=item.product.id) }}" class="d-flex gap-2">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="0" class="form-control" style="width: 80px;">
+                            <button type="submit" class="btn btn-sm btn-primary">Обновить</button>
+                        </form>
+                    </td>
+                    <td>{{ item.total }} ₽</td>
+                    <td>
+                        <a href="{{ url_for('remove_from_cart', product_id=item.product.id) }}" class="btn btn-sm btn-danger">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr class="table-active">
+                    <td colspan="3" class="text-end"><strong>Итого:</strong></td>
+                    <td><strong>{{ total }} ₽</strong></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('checkout') }}" class="btn btn-success">Оформить заказ</a>
+{% else %}
+    <p>Корзина пуста</p>
+{% endif %}
+<a href="{{ url_for('index') }}" class="btn btn-secondary">Продолжить покупки</a>
+{% endblock %}

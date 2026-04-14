@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Заявка #{{ consultation.id }}</h1>
+<div class="card">
+    <div class="card-body">
+        <p><strong>Имя:</strong> {{ consultation.name }}</p>
+        <p><strong>Email:</strong> {{ consultation.email }}</p>
+        <p><strong>Телефон:</strong> {{ consultation.phone }}</p>
+        <p><strong>Животное:</strong> {{ consultation.animal_type }}</p>
+        <p><strong>Бюджет:</strong> {{ consultation.budget or 'не указан' }}</p>
+        <p><strong>Опыт:</strong> {{ consultation.experience or 'не указан' }}</p>
+        <p><strong>Комментарий:</strong> {{ consultation.comment or 'нет' }}</p>
+        <p><strong>Статус:</strong> {{ consultation.status }}</p>
+        <p><strong>Дата создания:</strong> {{ consultation.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+    </div>
+</div>
+<a href="{{ url_for('admin_consultations') }}" class="btn btn-secondary mt-3">Назад к списку</a>
+{% endblock %}

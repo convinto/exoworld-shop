@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ №{{ order.id }}{% endblock %}
+
+{% block content %}
+<h1>Заказ №{{ order.id }}</h1>
+<p><strong>Дата:</strong> {{ order.date.strftime('%d.%m.%Y %H:%M') }}</p>
+<p><strong>Статус:</strong> {{ order.status }}</p>
+<p><strong>Адрес доставки:</strong> {{ order.address }}</p>
+<p><strong>Телефон:</strong> {{ order.phone }}</p>
+<p><strong>Комментарий:</strong> {{ order.comment or '—' }}</p>
+<h3>Состав заказа</h3>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr><th>Товар</th><th>Количество</th><th>Цена</th><th>Сумма</th></tr>
+        </thead>
+        <tbody>
+            {% for item in order.items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }} ₽</td>
+                <td>{{ item.quantity * item.price }} ₽</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{{ url_for('my_orders') }}" class="btn btn-secondary">Назад к моим заказам</a>
+{% endblock %}

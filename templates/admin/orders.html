@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Управление заказами</h1>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Пользователь</th>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Телефон</th>
+                <th>Адрес</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.user.username }}</td>
+                <td>{{ order.date.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>{{ order.total }} ₽</td>
+                <td>
+                    <form method="POST" action="{{ url_for('update_order_status', order_id=order.id) }}" class="d-flex">
+                        <select name="status" class="form-select form-select-sm me-2" style="width: auto;">
+                            <option value="Новый" {% if order.status == 'Новый' %}selected{% endif %}>Новый</option>
+                            <option value="Оплачен" {% if order.status == 'Оплачен' %}selected{% endif %}>Оплачен</option>
+                            <option value="Отправлен" {% if order.status == 'Отправлен' %}selected{% endif %}>Отправлен</option>
+                            <option value="Завершён" {% if order.status == 'Завершён' %}selected{% endif %}>Завершён</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">Обновить</button>
+                    </form>
+                </td>
+                <td>{{ order.phone }}</td>
+                <td>{{ order.address[:50] }}{% if order.address|length > 50 %}...{% endif %}</td>
+                <td>
+                    <a href="{{ url_for('admin_order_detail', order_id=order.id) }}" class="btn btn-sm btn-info">Детали</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

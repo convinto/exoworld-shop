@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Оформление заказа</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label for="address" class="form-label">Адрес доставки</label>
+        <textarea class="form-control" id="address" name="address" rows="2" required placeholder="Город, улица, дом, квартира"></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="phone" class="form-label">Телефон</label>
+        <input type="tel" class="form-control" id="phone" name="phone" required placeholder="+7 (XXX) XXX-XX-XX">
+    </div>
+    <div class="mb-3">
+        <label for="comment" class="form-label">Комментарий к заказу (необязательно)</label>
+        <textarea class="form-control" id="comment" name="comment" rows="2" placeholder="Укажите удобное время доставки, особые пожелания"></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Подтвердить заказ</button>
+    <a href="{{ url_for('cart') }}" class="btn btn-secondary">Вернуться в корзину</a>
+</form>
+{% endblock %}

@@ -1,0 +1,15 @@
+/* Немного ручных правок */
+.card-img-top {
+    object-fit: cover;
+    height: 200px;
+}
+.hero {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+.navbar-brand i {
+    font-size: 1.5rem;
+}
+footer a {
+    color: #a5d6a7;
+    text-decoration: none;
+}
