@@ -9,10 +9,18 @@ import re
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 import os
+from PIL import Image
 
 load_dotenv()  # загружает переменные из .env
 
 app = Flask(__name__)
+
+@app.after_request
+def add_cache_control(response):
+    if request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'public, max-age=86400'
+    return response
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'vbelarus2026')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'   # ЭТА СТРОКА ОБЯЗАТЕЛЬНА
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -104,11 +112,87 @@ class Consultation(db.Model):
     status = db.Column(db.String(20), default='Новая')       # Новая, В работе, Завершена
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
+class Ad(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    # description = db.Column(db.Text, nullable=False)
+    ad_type = db.Column(db.String(20), nullable=False)  # 'sale' или 'buy'
+    price = db.Column(db.Float, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    status = db.Column(db.String(20), default='pending', index=True)
+    ad_type = db.Column(db.String(20), index=True)
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), index=True)
+    # Удалено поле contacts и show_contacts
+    image = db.Column(db.String(200), default='default_ad.jpg')
+    # user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref='ads')
+    # status = db.Column(db.String(20), default='pending')  # pending, active, closed, rejected
+    # created_at = db.Column(db.DateTime, server_default=db.func.now())
+    admin_comment = db.Column(db.Text, default='')
+
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ad_id = db.Column(db.Integer, db.ForeignKey('ad.id'), nullable=True)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
+    # Добавляем отношение к объявлению
+    ad = db.relationship('Ad', backref='conversations', foreign_keys=[ad_id])
+
+class ConversationParticipant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # когда пользователь последний раз читал
+    last_read_at = db.Column(db.DateTime)
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), index=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    is_read = db.Column(db.Boolean, default=False)
+
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref='chat_messages')
+    message = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now(), index =True)
+
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # --- Маршруты ---
+
+@app.route('/chat', methods=['GET', 'POST'])
+@login_required
+def chat():
+    if request.method == 'POST':
+        message = request.form.get('message')
+        if message:
+            msg = ChatMessage(user_id=current_user.id, message=message)
+            db.session.add(msg)
+            db.session.commit()
+        return redirect(url_for('chat'))
+    
+    messages = ChatMessage.query.order_by(ChatMessage.timestamp.asc()).all()
+    return render_template('chat.html', messages=messages)
+
+@app.route('/chat/messages')
+@login_required
+def chat_messages():
+    messages = ChatMessage.query.order_by(ChatMessage.timestamp.asc()).all()
+    data = []
+    for msg in messages:
+        data.append({
+            'username': msg.user.username,
+            'message': msg.message,
+            'timestamp': msg.timestamp.strftime('%d.%m.%Y %H:%M')
+        })
+    return {'messages': data}
+
 @app.route('/')
 def index():
     products = Product.query.order_by(Product.id.desc()).limit(6).all()
@@ -640,6 +724,302 @@ def order_detail(order_id):
         return redirect(url_for('my_orders'))
     return render_template('order_detail.html', order=order)
 
+@app.route('/ads')
+def ads_list():
+    ad_type = request.args.get('type', 'all')  # all, sale, buy
+    query = Ad.query.filter_by(status='active')  # показываем только активные
+    if ad_type == 'sale':
+        query = query.filter_by(ad_type='sale')
+    elif ad_type == 'buy':
+        query = query.filter_by(ad_type='buy')
+    ads = query.order_by(Ad.created_at.desc()).all()
+    return render_template('ads/list.html', ads=ads, current_type=ad_type)
+
+@app.route('/ads/<int:id>')
+def ad_detail(id):
+    ad = Ad.query.get_or_404(id)
+    show_contacts = request.form.get('show_contacts') == 'on'   # в POST
+    ad.show_contacts = show_contacts
+    # Только активные объявления может смотреть любой, свои – даже неактивные
+    if ad.status != 'active' and (not current_user.is_authenticated or current_user.id != ad.user_id):
+        flash('Объявление недоступно', 'danger')
+        return redirect(url_for('ads_list'))
+    return render_template('ads/detail.html', ad=ad)
+
+@app.route('/ads/create', methods=['GET', 'POST'])
+@login_required
+def ad_create():
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        ad_type = request.form['ad_type']
+        price = request.form.get('price', type=float)
+
+        # Обработка изображения
+        image_file = request.files.get('image')
+        image_filename = 'default_ad.jpg'
+
+        if image_file and allowed_file(image_file.filename):
+            filename = secure_filename(image_file.filename)
+            name_parts = os.path.splitext(filename)
+            unique_name = f"{name_parts[0]}_{int(os.times().system)}{name_parts[1]}"
+            temp_path = os.path.join('static/uploads/ads', unique_name)
+            os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+            
+            # Сжатие изображения
+            img = Image.open(image_file)
+            img.thumbnail((800, 800))
+            img.save(temp_path, optimize=True, quality=85)
+            
+            image_filename = unique_name
+
+        if ad_type == 'sale' and not price:
+            flash('Для объявления о продаже укажите цену', 'danger')
+            return redirect(url_for('ad_create'))
+
+        ad = Ad(
+            title=title,
+            description=description,
+            ad_type=ad_type,
+            price=price,
+            user_id=current_user.id,
+            status='pending',
+            image=image_filename
+        )
+        db.session.add(ad)
+        db.session.commit()
+        flash('Объявление отправлено на модерацию', 'success')
+        return redirect(url_for('ads_list'))
+    
+    return render_template('ads/create.html')
+
+@app.route('/ads/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def ad_edit(id):
+    ad = Ad.query.get_or_404(id)
+    if ad.user_id != current_user.id and not current_user.is_admin:
+        flash('Нет прав', 'danger')
+        return redirect(url_for('ads_list'))
+    if ad.status != 'pending' and not current_user.is_admin:
+        flash('Редактирование возможно только пока объявление на модерации', 'danger')
+        return redirect(url_for('ad_detail', id=ad.id))
+
+    if request.method == 'POST':
+        ad.title = request.form['title']
+        ad.description = request.form['description']
+        ad.ad_type = request.form['ad_type']
+        ad.price = request.form.get('price', type=float)
+
+        # Обновление изображения
+        image_file = request.files.get('image')
+        if image_file and allowed_file(image_file.filename):
+            # Удаляем старое, если не default
+            if ad.image and ad.image != 'default_ad.jpg':
+                old_path = os.path.join('static/uploads/ads', ad.image)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            filename = secure_filename(image_file.filename)
+            name_parts = os.path.splitext(filename)
+            unique_name = f"{name_parts[0]}_{int(os.times().system)}{name_parts[1]}"
+            image_path = os.path.join('static/uploads/ads', unique_name)
+            os.makedirs(os.path.dirname(image_path), exist_ok=True)
+            
+            # Сжатие изображения
+            img = Image.open(image_file)
+            img.thumbnail((800, 800))
+            img.save(image_path, optimize=True, quality=85)
+            
+            ad.image = unique_name
+
+        db.session.commit()
+        flash('Объявление обновлено', 'success')
+        return redirect(url_for('ad_detail', id=ad.id))
+    
+    return render_template('ads/edit.html', ad=ad)
+
+@login_required
+def ad_edit(id):
+    ad = Ad.query.get_or_404(id)
+    if ad.user_id != current_user.id and not current_user.is_admin:
+        flash('Нет прав', 'danger')
+        return redirect(url_for('ads_list'))# и снимите ограничение на статус для админа
+    if ad.status != 'pending' and not current_user.is_admin:
+        flash('Редактирование возможно только пока объявление на модерации', 'danger')
+        return redirect(url_for('ad_detail', id=ad.id))
+    
+    if request.method == 'POST':
+        ad.title = request.form['title']
+        ad.description = request.form['description']
+        ad.ad_type = request.form['ad_type']
+        ad.price = request.form.get('price', type=float)
+        ad.contacts = request.form['contacts']
+        db.session.commit()
+        flash('Объявление обновлено', 'success')
+        return redirect(url_for('ad_detail', id=ad.id))
+    
+    return render_template('ads/edit.html', ad=ad)
+
+@app.route('/ads/delete/<int:id>')
+@login_required
+def ad_delete(id):
+    ad = Ad.query.get_or_404(id)
+    if ad.user_id != current_user.id and not current_user.is_admin:
+        flash('Нет прав', 'danger')
+        return redirect(url_for('ads_list'))
+    db.session.delete(ad)
+    db.session.commit()
+    flash('Объявление удалено', 'info')
+    return redirect(url_for('ads_list'))
+
+@app.route('/admin/ads')
+@login_required
+def admin_ads():
+    if not current_user.is_admin:
+        flash('Доступ запрещен', 'danger')
+        return redirect(url_for('index'))
+    status_filter = request.args.get('status', 'pending')
+    query = Ad.query
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    ads = query.order_by(Ad.created_at.desc()).all()
+    return render_template('admin/ads.html', ads=ads, status_filter=status_filter)
+
+@app.route('/admin/ads/<int:id>/moderate', methods=['POST'])
+@login_required
+def moderate_ad(id):
+    if not current_user.is_admin:
+        flash('Доступ запрещен', 'danger')
+        return redirect(url_for('index'))
+    ad = Ad.query.get_or_404(id)
+    new_status = request.form['status']
+    admin_comment = request.form.get('admin_comment', '')
+    if new_status in ['active', 'closed', 'rejected']:
+        ad.status = new_status
+        ad.admin_comment = admin_comment
+        db.session.commit()
+        flash(f'Статус объявления изменён на "{new_status}"', 'success')
+    else:
+        flash('Некорректный статус', 'danger')
+    return redirect(url_for('admin_ads'))
+
+@app.route('/messages')
+@login_required
+def messages_list():
+    # Находим все диалоги, где участвует пользователь
+    conv_ids = db.session.query(ConversationParticipant.conversation_id).filter_by(user_id=current_user.id)
+    conversations = Conversation.query.filter(Conversation.id.in_(conv_ids)).order_by(Conversation.updated_at.desc()).all()
+    
+    # Для каждого диалога получаем последнее сообщение и непрочитанные
+    dialogs = []
+    for conv in conversations:
+        last_msg = Message.query.filter_by(conversation_id=conv.id).order_by(Message.created_at.desc()).first()
+        # Количество непрочитанных сообщений для текущего пользователя
+        unread = Message.query.filter(
+            Message.conversation_id == conv.id,
+            Message.is_read == False,
+            Message.sender_id != current_user.id
+        ).count()
+        # Определяем собеседника
+        participants = ConversationParticipant.query.filter_by(conversation_id=conv.id).all()
+        other = None
+        for p in participants:
+            if p.user_id != current_user.id:
+                other = User.query.get(p.user_id)
+                break
+        dialogs.append({
+            'conversation': conv,
+            'last_message': last_msg,
+            'unread': unread,
+            'other_user': other
+        })
+    return render_template('messages/list.html', dialogs=dialogs)
+
+@app.route('/messages/<int:conv_id>', methods=['GET', 'POST'])
+@login_required
+def messages_detail(conv_id):
+    conv = Conversation.query.get_or_404(conv_id)
+    # Проверяем, участвует ли пользователь в диалоге
+    participant = ConversationParticipant.query.filter_by(conversation_id=conv.id, user_id=current_user.id).first()
+    if not participant and not current_user.is_admin:
+        flash('Нет доступа к этому диалогу', 'danger')
+        return redirect(url_for('messages_list'))
+    
+    if request.method == 'POST':
+        content = request.form.get('content')
+        if content:
+            msg = Message(conversation_id=conv.id, sender_id=current_user.id, content=content)
+            db.session.add(msg)
+            # Обновляем время обновления диалога
+            conv.updated_at = db.func.now()
+            # Сбрасываем last_read_at для получателя (чтобы он видел непрочитанное)
+            other_participant = ConversationParticipant.query.filter(
+                ConversationParticipant.conversation_id == conv.id,
+                ConversationParticipant.user_id != current_user.id
+            ).first()
+            if other_participant:
+                # last_read_at остается старым, is_read = False для новых сообщений
+                pass
+            db.session.commit()
+            flash('Сообщение отправлено', 'success')
+        return redirect(url_for('messages_detail', conv_id=conv.id))
+    
+    # GET – показать диалог
+    messages = Message.query.filter_by(conversation_id=conv.id).order_by(Message.created_at).all()
+    # Помечаем все сообщения, где получатель – текущий пользователь, как прочитанные
+    for msg in messages:
+        if msg.sender_id != current_user.id and not msg.is_read:
+            msg.is_read = True
+    # Обновляем last_read_at участника
+    participant.last_read_at = db.func.now()
+    db.session.commit()
+    
+    # Определяем другого участника
+    other_user_id = [p.user_id for p in ConversationParticipant.query.filter_by(conversation_id=conv.id).all() if p.user_id != current_user.id]
+    other_user = User.query.get(other_user_id[0]) if other_user_id else None
+    
+    return render_template('messages/detail.html', conversation=conv, messages=messages, other_user=other_user)
+
+@app.route('/start-conversation/<int:ad_id>')
+@login_required
+def start_conversation(ad_id):
+    ad = Ad.query.get_or_404(ad_id)
+    if ad.user_id == current_user.id:
+        flash('Нельзя написать самому себе', 'warning')
+        return redirect(url_for('ad_detail', id=ad.id))
+    
+    # Ищем существующий диалог между этими пользователями по этому объявлению
+    conv = Conversation.query.filter_by(ad_id=ad.id).join(ConversationParticipant).filter(
+        ConversationParticipant.user_id.in_([current_user.id, ad.user_id])
+    ).group_by(Conversation.id).having(db.func.count(ConversationParticipant.user_id) == 2).first()
+    
+    if not conv:
+        conv = Conversation(ad_id=ad.id)
+        db.session.add(conv)
+        db.session.commit()
+        # Добавляем участников
+        for uid in [current_user.id, ad.user_id]:
+            cp = ConversationParticipant(conversation_id=conv.id, user_id=uid)
+            db.session.add(cp)
+        db.session.commit()
+    
+    return redirect(url_for('messages_detail', conv_id=conv.id))
+
+# @app.context_processor
+# def utility_processor():
+#     unread = 0
+#     if current_user.is_authenticated:
+#         from app import Message, ConversationParticipant, db  # или используйте глобальные переменные
+#         unread = Message.query.filter(
+#             Message.conversation_id.in_(
+#                 db.session.query(ConversationParticipant.conversation_id).filter_by(user_id=current_user.id)
+#             ),
+#             Message.is_read == False,
+#             Message.sender_id != current_user.id
+#         ).count()
+#     return dict(unread_messages_count=unread)
+
+
+
 # --- Создание таблиц и администратора ---
 with app.app_context():
     db.create_all()
@@ -649,6 +1029,9 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
         print("Создан администратор: admin / admin123")
+
+# if __name__ == '__main__':
+#     app.run(debug=False, host='0.0.0.0', port=5000)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Доска объявлений</h1>
+<div class="mb-3">
+    <a href="{{ url_for('ads_list', type='all') }}" class="btn btn-outline-primary">Все</a>
+    <a href="{{ url_for('ads_list', type='sale') }}" class="btn btn-outline-success">Продажа</a>
+    <a href="{{ url_for('ads_list', type='buy') }}" class="btn btn-outline-info">Покупка</a>
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('ad_create') }}" class="btn btn-primary float-end">➕ Добавить объявление</a>
+    {% endif %}
+</div>
+<div class="row">
+    {% for ad in ads %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <span class="badge bg-{{ 'success' if ad.ad_type == 'sale' else 'info' }}">
+                    {{ 'Продажа' if ad.ad_type == 'sale' else 'Покупка' }}
+                </span>
+                <h5 class="card-title mt-2">{{ ad.title }}</h5>
+                <p class="card-text">{{ ad.description[:100] }}</p>
+                {% if ad.price %}
+                    <p class="fw-bold">{{ ad.price }} ₽</p>
+                {% endif %}
+                <a href="{{ url_for('ad_detail', id=ad.id) }}" class="btn btn-sm btn-primary">Подробнее</a>
+            </div>
+            <div class="card-footer text-muted small">
+                {{ ad.created_at.strftime('%d.%m.%Y') }}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p>Нет объявлений.</p>
+    {% endfor %}
+</div>
+{% endblock %}

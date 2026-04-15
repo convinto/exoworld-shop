@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Создать объявление{% endblock %}
+
+{% block content %}
+<h1>Создать объявление</h1>
+<form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="title" class="form-label">Заголовок *</label>
+        <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Описание *</label>
+        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Тип объявления *</label>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="ad_type" id="type_sale" value="sale" checked>
+            <label class="form-check-label" for="type_sale">Продажа</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="ad_type" id="type_buy" value="buy">
+            <label class="form-check-label" for="type_buy">Покупка</label>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="price" class="form-label">Цена (₽)</label>
+        <input type="number" class="form-control" id="price" name="price" step="0.01">
+        <div class="form-text">Для объявлений о продаже цена обязательна.</div>
+    </div>
+    <div class="mb-3">
+        <label for="image" class="form-label">Фото</label>
+        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить на модерацию</button>
+    <a href="{{ url_for('ads_list') }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Мои диалоги</h1>
+{% if dialogs %}
+<div class="list-group">
+    {% for d in dialogs %}
+    <a href="{{ url_for('messages_detail', conv_id=d.conversation.id) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ d.other_user.username }}</h5>
+            <small>{{ d.last_message.created_at.strftime('%d.%m.%Y %H:%M') if d.last_message else '' }}</small>
+        </div>
+        <p class="mb-1">{{ d.last_message.content[:100] if d.last_message else 'Нет сообщений' }}</p>
+        {% if d.unread > 0 %}
+            <span class="badge bg-danger rounded-pill">{{ d.unread }} новых</span>
+        {% endif %}
+        {% if d.conversation.ad_id %}
+            <small>Объявление: {{ d.conversation.ad.title }}</small>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p>У вас пока нет диалогов.</p>
+{% endif %}
+{% endblock %}

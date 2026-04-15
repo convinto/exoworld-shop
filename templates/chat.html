@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Общий чат{% endblock %}
+
+{% block content %}
+<h1>Общий чат</h1>
+<div id="chat-messages" class="card mb-3" style="height: 400px; overflow-y: scroll;">
+    <div class="card-body">
+        {% for msg in messages %}
+            <div class="mb-2">
+                <strong>{{ msg.user.username }}</strong> <small class="text-muted">{{ msg.timestamp.strftime('%d.%m.%Y %H:%M') }}</small><br>
+                {{ msg.message }}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<form method="POST" id="chat-form">
+    <div class="input-group">
+        <input type="text" name="message" class="form-control" placeholder="Ваше сообщение..." required>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+    </div>
+</form>
+
+<script>
+    function loadMessages() {
+        fetch('/chat/messages')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.querySelector('#chat-messages .card-body');
+                if (container) {
+                    container.innerHTML = data.messages.map(msg => `
+                        <div class="mb-2">
+                            <strong>${msg.username}</strong> <small class="text-muted">${msg.timestamp}</small><br>
+                            ${msg.message}
+                        </div>
+                    `).join('');
+                    // Автопрокрутка вниз
+                    container.scrollTop = container.scrollHeight;
+                }
+            });
+    }
+
+    // Загружаем сообщения каждые 5 секунд
+    setInterval(loadMessages, 15000);
+    
+    // При отправке формы не перезагружаем страницу, а отправляем через fetch
+    document.getElementById('chat-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/chat', {
+            method: 'POST',
+            body: formData
+        }).then(() => {
+            this.reset();
+            loadMessages(); // сразу обновляем
+        });
+    });
+    
+    // Первоначальная загрузка
+    loadMessages();
+</script>
+{% endblock %}

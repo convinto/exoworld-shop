@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Модерация объявлений</h1>
+<div class="mb-3">
+    <a href="{{ url_for('admin_ads', status='pending') }}" class="btn btn-warning">На модерации</a>
+    <a href="{{ url_for('admin_ads', status='active') }}" class="btn btn-success">Активные</a>
+    <a href="{{ url_for('admin_ads', status='rejected') }}" class="btn btn-danger">Отклонённые</a>
+    <a href="{{ url_for('admin_ads', status='all') }}" class="btn btn-secondary">Все</a>
+</div>
+<table class="table table-striped">
+    <thead>
+        <tr><th>ID</th><th>Автор</th><th>Тип</th><th>Заголовок</th><th>Статус</th><th>Действия</th></tr>
+    </thead>
+    <tbody>
+        {% for ad in ads %}
+        <tr>
+            <td>{{ ad.id }}</td>
+            <td>{{ ad.user.username }}</td>
+            <td>{{ 'Продажа' if ad.ad_type == 'sale' else 'Покупка' }}</td>
+            <td>{{ ad.title }}</td>
+            <td>{{ ad.status }}</td>
+            <td>
+                <a href="{{ url_for('ad_detail', id=ad.id) }}" class="btn btn-sm btn-info">Просмотр</a>
+                <form method="POST" action="{{ url_for('moderate_ad', id=ad.id) }}" class="d-inline">
+                    <select name="status">
+                        <option value="active" {% if ad.status=='active' %}selected{% endif %}>Активно</option>
+                        <option value="rejected" {% if ad.status=='rejected' %}selected{% endif %}>Отклонить</option>
+                        <option value="closed" {% if ad.status=='closed' %}selected{% endif %}>Закрыто</option>
+                    </select>
+                    <input type="text" name="admin_comment" placeholder="Комментарий">
+                    <button type="submit" class="btn btn-sm btn-primary">Применить</button>
+                </form>
+                <a href="{{ url_for('ad_edit', id=ad.id) }}" class="btn btn-sm btn-warning">Ред.</a>
+                <a href="{{ url_for('ad_delete', id=ad.id) }}" class="btn btn-sm btn-danger">Удалить</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать объявление{% endblock %}
+
+{% block content %}
+<h1>Редактировать объявление</h1>
+<form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="title" class="form-label">Заголовок *</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{ ad.title }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Описание *</label>
+        <textarea class="form-control" id="description" name="description" rows="5" required>{{ ad.description }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Тип объявления *</label>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="ad_type" id="type_sale" value="sale" {% if ad.ad_type == 'sale' %}checked{% endif %}>
+            <label class="form-check-label" for="type_sale">Продажа</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="ad_type" id="type_buy" value="buy" {% if ad.ad_type == 'buy' %}checked{% endif %}>
+            <label class="form-check-label" for="type_buy">Покупка</label>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="price" class="form-label">Цена (₽)</label>
+        <input type="number" class="form-control" id="price" name="price" step="0.01" value="{{ ad.price }}">
+    </div>
+    <div class="mb-3">
+        <label for="image" class="form-label">Фото</label>
+        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+        {% if ad.image and ad.image != 'default_ad.jpg' %}
+            <div class="mt-2">
+                <img src="{{ url_for('static', filename='uploads/ads/' + ad.image) }}" style="max-height: 100px;">
+                <p class="small">Текущее фото. Загрузите новое, чтобы заменить.</p>
+            </div>
+        {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    <a href="{{ url_for('ad_detail', id=ad.id) }}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

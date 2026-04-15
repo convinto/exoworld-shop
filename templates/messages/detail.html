@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Диалог{% endblock %}
+{% block head %}
+    {{ super() }}
+    <meta http-equiv="refresh" content="30">
+{% endblock %}
+{% block content %}
+<h1>Диалог с {{ other_user.username }}</h1>
+<div class="card mb-3">
+    <div class="card-body" style="height: 400px; overflow-y: scroll;">
+        {% for msg in messages %}
+            <div class="mb-2 {% if msg.sender_id == current_user.id %}text-end{% endif %}">
+                <div class="d-inline-block p-2 rounded {% if msg.sender_id == current_user.id %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 75%;">
+                    <strong>{{ msg.sender.username if msg.sender else '?' }}</strong><br>
+                    {{ msg.content }}
+                    <div class="small">{{ msg.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<form method="POST">
+    <div class="input-group">
+        <textarea name="content" class="form-control" placeholder="Ваше сообщение..." rows="2" required></textarea>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+    </div>
+</form>
+
+<div class="mt-2">
+    <a href="{{ url_for('messages_list') }}" class="btn btn-secondary">К списку диалогов</a>
+</div>
+
+<script>
+    // Автоматическая прокрутка вниз
+    const container = document.querySelector('.card-body');
+    container.scrollTop = container.scrollHeight;
+    
+    // Уведомление о необходимости обновления страницы (можно реализовать через периодический опрос)
+    setTimeout(function() {
+        alert("Если вы ожидаете ответа, обновите страницу (F5), чтобы увидеть новые сообщения.");
+    }, 5000);
+</script>
+{% endblock %}
