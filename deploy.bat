@@ -1,0 +1,9 @@
+@echo off
+echo Adding all changes...
+git add .
+echo Committing...
+git commit -m "Auto-deploy %date% %time%"
+echo Pushing to GitHub...
+git push
+echo Done!
+pause
