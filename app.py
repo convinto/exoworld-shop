@@ -22,7 +22,14 @@ def add_cache_control(response):
     return response
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'vbelarus2026')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'   # ЭТА СТРОКА ОБЯЗАТЕЛЬНА
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'   # ЭТА СТРОКА ОБЯЗАТЕЛЬНА
+
+if os.environ.get('AMVERA'):
+    db_path = '/data/shop.db'
+else:
+    db_path = os.path.join(os.path.dirname(__file__), 'instance', 'shop.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Настройки почты
@@ -35,7 +42,14 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 db = SQLAlchemy(app)   # Теперь ошибки не будет
 mail = Mail(app)
 
-UPLOAD_FOLDER = 'static/uploads'
+# UPLOAD_FOLDER = 'static/uploads'
+
+if os.environ.get('AMVERA'):
+    UPLOAD_FOLDER = '/data/uploads'
+else:
+    UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
