@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Присоединиться к команде{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="mb-4">🤝 Стать частью команды «ЭкзоМир»</h1>
+        <p class="lead">Мы ищем единомышленников, которые разделяют нашу любовь к экзотическим животным и хотят помогать проекту развиваться.</p>
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Как вас зовут? *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="telegram" class="form-label">Telegram (никнейм)</label>
+                        <input type="text" class="form-control" id="telegram" name="telegram" placeholder="@username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="experience" class="form-label">Расскажите о вашем опыте с экзотическими животными *</label>
+                        <textarea class="form-control" id="experience" name="experience" rows="4" required placeholder="Кого содержали/разводили, какие виды знаете, какой опыт помощи другим и т.д."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Какими навыками вы можете помочь проекту?</label>
+                        <textarea class="form-control" id="skills" name="skills" rows="3" placeholder="Например: фото/видеосъёмка, написание статей, ведение соцсетей, юридическая поддержка, программирование, дизайн и т.п."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivation" class="form-label">Почему вы хотите присоединиться к нам? *</label>
+                        <textarea class="form-control" id="motivation" name="motivation" rows="3" required></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="agree_privacy" name="agree_privacy" required>
+                        <label class="form-check-label" for="agree_privacy">
+        Я согласен с <a href="{{ url_for('privacy') }}" target="_blank">политикой конфиденциальности</a> и <a href="{{ url_for('terms') }}" target="_blank">пользовательским соглашением</a>.
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success">Отправить заявку</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">Вернуться на главную</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

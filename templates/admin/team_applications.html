@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Заявки в команду{% endblock %}
+
+{% block content %}
+<h1>Заявки желающих вступить в команду</h1>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Дата</th>
+                <th>Имя</th>
+                <th>Email</th>
+                <th>Telegram</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.id }}</td>
+                <td>{{ app.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>{{ app.name }}</td>
+                <td>{{ app.email }}</td>
+                <td>{{ app.telegram or '—' }}</td>
+                <td>{{ app.status }}</td>
+                <td>
+                    <a href="{{ url_for('admin_team_application_detail', id=app.id) }}" class="btn btn-sm btn-info">Просмотр</a>
+                    <form method="POST" action="{{ url_for('admin_update_application_status', id=app.id) }}" class="d-inline">
+                        <select name="status">
+                            <option value="new" {% if app.status == 'new' %}selected{% endif %}>Новая</option>
+                            <option value="viewed" {% if app.status == 'viewed' %}selected{% endif %}>Просмотрена</option>
+                            <option value="contacted" {% if app.status == 'contacted' %}selected{% endif %}>Связались</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">Обновить</button>
+                    </form>
+                 </td>
+             </tr>
+            {% else %}
+            <tr><td colspan="7">Нет заявок</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

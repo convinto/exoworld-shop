@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Регистрация – ЭкзоМир{% endblock %}
+{% block title %}Регистрация – C:Exo{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -28,6 +28,12 @@
                     <div class="mb-3">
                         <label for="confirm" class="form-label">Подтвердите пароль</label>
                         <input type="password" class="form-control" id="confirm" name="confirm" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="agree_privacy" name="agree_privacy" required>
+                        <label class="form-check-label" for="agree_privacy">
+        Я согласен с <a href="{{ url_for('privacy') }}" target="_blank">политикой конфиденциальности</a> и <a href="{{ url_for('terms') }}" target="_blank">пользовательским соглашением</a>.
+                        </label>
                     </div>
                     <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
                 </form>

@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import re
-from flask_mail import Mail, Message
+from flask_mail import Mail, Message as MailMessage
 from dotenv import load_dotenv
 import os
 from PIL import Image
@@ -174,6 +174,17 @@ class ChatMessage(db.Model):
     message = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now(), index =True)
 
+class TeamApplication(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    telegram = db.Column(db.String(100))
+    experience = db.Column(db.Text, nullable=False)   # опыт с экзотикой
+    motivation = db.Column(db.Text, nullable=False)   # почему хочет в команду
+    skills = db.Column(db.Text)                       # что умеет (писать, снимать и т.д.)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    status = db.Column(db.String(20), default='new')  # new, viewed, contacted
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -272,6 +283,13 @@ def checkout():
         address = request.form['address']
         phone = request.form['phone']
         comment = request.form.get('comment', '')
+        
+        # Проверка согласия
+        agree = request.form.get('agree_privacy')
+        if not agree:
+            flash('Необходимо согласие с политикой конфиденциальности и пользовательским соглашением', 'danger')
+            return redirect(url_for('checkout'))
+        
         cart_data = session.get('cart', {})
         if not cart_data:
             flash('Корзина пуста', 'warning')
@@ -314,6 +332,11 @@ def register():
         email = request.form['email']
         password = request.form['password']
         
+        agree = request.form.get('agree_privacy')
+        if not agree:
+            flash('Необходимо согласие с политикой конфиденциальности и пользовательским соглашением', 'danger')
+            return redirect(url_for('register'))
+
         user = User.query.filter_by(username=username).first()
         if user:
             flash('Пользователь с таким именем уже существует', 'danger')
@@ -399,6 +422,87 @@ def add_product():
         return redirect(url_for('admin_panel'))
     
     return render_template('admin/edit_product.html')
+
+@app.route('/join', methods=['GET', 'POST'])
+@login_required
+def join_team():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        telegram = request.form.get('telegram', '')
+        experience = request.form['experience']
+        motivation = request.form['motivation']
+        skills = request.form.get('skills', '')
+        
+        # Проверка согласия
+        agree = request.form.get('agree_privacy')
+        if not agree:
+            flash('Необходимо согласие с политикой конфиденциальности и пользовательским соглашением', 'danger')
+            return redirect(url_for('join_team'))
+
+        application = TeamApplication(
+            name=name, email=email, telegram=telegram,
+            experience=experience, motivation=motivation, skills=skills
+        )
+        db.session.add(application)
+        db.session.commit()
+
+        try:
+            msg = MailMessage(
+            f'Новая заявка в команду от {name}',
+            sender=app.config['MAIL_USERNAME'],
+            recipients=['info-convinto@mail.ru']
+            )
+            msg.body = f"""
+Имя: {name}
+Email: {email}
+Telegram: {telegram or 'не указан'}
+
+Опыт с экзотическими животными:
+{experience}
+
+Мотивация:
+{motivation}
+
+Навыки (что умеет):
+{skills or 'не указано'}
+
+---
+Заявка #{application.id} от {application.created_at.strftime('%d.%m.%Y %H:%M')}
+            """
+            mail.send(msg)
+            flash('Спасибо! Ваша заявка принята. Мы свяжемся с вами в ближайшее время.', 'success')
+        except Exception as e:
+            app.logger.error(f'Ошибка отправки письма: {e}')
+            flash('Заявка сохранена, но уведомление не отправлено. Мы свяжемся с вами.', 'warning')
+        
+        return redirect(url_for('join_team'))
+    
+    return render_template('join.html')
+
+@app.route('/admin/team-application/<int:id>')
+@login_required
+def admin_team_application_detail(id):
+    if not current_user.is_admin:
+        flash('Доступ запрещен', 'danger')
+        return redirect(url_for('index'))
+    app = TeamApplication.query.get_or_404(id)
+    return render_template('admin/team_application_detail.html', application=app)
+
+@app.route('/admin/team-application/<int:id>/status', methods=['POST'])
+@login_required
+def admin_update_application_status(id):
+    if not current_user.is_admin:
+        flash('Доступ запрещен', 'danger')
+        return redirect(url_for('index'))
+    app = TeamApplication.query.get_or_404(id)
+    new_status = request.form['status']
+    app.status = new_status
+    db.session.commit()
+    flash('Статус обновлен', 'success')
+    return redirect(url_for('admin_team_applications'))
+
+
 
 @app.route('/admin/product/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -1018,6 +1122,22 @@ def start_conversation(ad_id):
     
     return redirect(url_for('messages_detail', conv_id=conv.id))
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/contacts')
+def contacts():
+    return render_template('contacts.html')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
 # @app.context_processor
 # def utility_processor():
 #     unread = 0
@@ -1044,8 +1164,8 @@ with app.app_context():
         db.session.commit()
         print("Создан администратор: admin / admin123")
 
-if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=5000)
-
 # if __name__ == '__main__':
-#     app.run(debug=True, host='0.0.0.0', port=5000)
+#     app.run(debug=False, host='0.0.0.0', port=5000)
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

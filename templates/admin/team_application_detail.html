@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Заявка #{{ application.id }}{% endblock %}
+
+{% block content %}
+<h1>Заявка от {{ application.name }}</h1>
+<p><strong>Email:</strong> {{ application.email }}</p>
+<p><strong>Telegram:</strong> {{ application.telegram or '—' }}</p>
+<p><strong>Опыт:</strong> {{ application.experience }}</p>
+<p><strong>Мотивация:</strong> {{ application.motivation }}</p>
+<p><strong>Навыки:</strong> {{ application.skills or '—' }}</p>
+<p><strong>Статус:</strong> {{ application.status }}</p>
+<a href="{{ url_for('admin_team_applications') }}" class="btn btn-secondary">Назад</a>
+{% endblock %}

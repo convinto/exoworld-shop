@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Контакты – C:Exo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1 class="mb-4">📞 Свяжитесь с нами</h1>
+        <p class="lead">Мы открыты к диалогу — по любым вопросам, предложениям или просто для знакомства.</p>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5><i class="bi bi-envelope"></i> Email</h5>
+                        <p><a href="mailto:info-convinto@mail.ru">info-convinto@mail.ru</a> – общие вопросы и заказы<br>
+                        <a href="mailto:info-convinto@mail.ru">info-convinto@mail.ru</a> – для тех, кто хочет стать частью команды</p>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5><i class="bi bi-telegram"></i> Telegram</h5>
+                        <p><a href="https://t.me/exoworld_channel">@exoworld_channel</a> – новости и анонсы<br>
+                        <a href="https://t.me/exoworld_chat">@exoworld_chat</a> – чат для общения и консультаций</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5><i class="bi bi-person-plus"></i> Хотите помочь проекту?</h5>
+                        <p>Если у вас есть идеи, время или навыки — напишите нам. Вместе мы сможем вырастить «C:Exo» в полезный ресурс для всех любителей экзотики.</p>
+                        <a href="{{ url_for('join_team') }}" class="btn btn-outline-success">Стать частью команды</a>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5><i class="bi bi-question-circle"></i> Часто задаваемые вопросы</h5>
+                        <p>Ответы на многие вопросы уже есть в <a href="{{ url_for('encyclopedia') }}">Энциклопедии</a>. Не нашли? Напишите нам!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning mt-3">
+            <i class="bi bi-exclamation-triangle"></i> <strong>Важно:</strong> Мы молодой проект, только начинаем. Ваше терпение и обратная связь помогают нам становиться лучше. Спасибо, что вы с нами!
+        </div>
+    </div>
+</div>
+{% endblock %}

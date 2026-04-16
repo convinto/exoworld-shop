@@ -15,6 +15,12 @@
         <label for="comment" class="form-label">Комментарий к заказу (необязательно)</label>
         <textarea class="form-control" id="comment" name="comment" rows="2" placeholder="Укажите удобное время доставки, особые пожелания"></textarea>
     </div>
+    <div class="form-check mb-3">
+    <input type="checkbox" class="form-check-input" id="agree_privacy" name="agree_privacy" required>
+    <label class="form-check-label" for="agree_privacy">
+        Я согласен с <a href="{{ url_for('privacy') }}" target="_blank">политикой конфиденциальности</a> и <a href="{{ url_for('terms') }}" target="_blank">пользовательским соглашением</a>.
+    </label>
+    </div>
     <button type="submit" class="btn btn-success">Подтвердить заказ</button>
     <a href="{{ url_for('cart') }}" class="btn btn-secondary">Вернуться в корзину</a>
 </form>
